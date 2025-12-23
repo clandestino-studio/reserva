@@ -78,6 +78,18 @@ input{
 </head>
 
 <body>
+
+<script>
+  const PASSWORD = "CAMBIA_ESTA_PASSWORD";
+
+  const input = prompt("Contraseña de administrador");
+
+  if (input !== PASSWORD) {
+    alert("Acceso denegado");
+    window.location.href = "agendar.html";
+  }
+</script>
+
 <div class="panel">
 <h1>Panel Admin</h1>
 
