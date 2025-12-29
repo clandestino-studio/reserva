@@ -245,7 +245,6 @@ barberoInput.onchange=cargarHorarios;
 fechaInput.onchange=cargarHorarios;
 
 function reservar(){
-  alert("ENTRÓ A RESERVAR");
   if(!nombreInput.value || !barberoInput.value || !servicioInput.value || !fechaInput.value || !horaSeleccionada){
     alert("Completá todo");
     return;
@@ -263,13 +262,26 @@ function reservar(){
   console.log("Intentando guardar turno:", turno);
 
 db.collection("turnos").add(turno)
-  .then((docRef) => {
-    console.log("Turno guardado con ID:", docRef.id);
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Error al guardar turno");
-    });
+  .then(() => {
+    const tel = whatsapp[turno.barbero];
+
+    const msg = encodeURIComponent(
+      `Nuevo turno:\n${turno.nombre}\n${turno.fecha} ${turno.hora}\n${turno.servicio}`
+    );
+
+    const url = `https://wa.me/54${tel}?text=${msg}`;
+
+    // 👉 ABRIR WHATSAPP PRIMERO
+    window.open(url, "_blank");
+
+    // 👉 AVISAR AL USUARIO
+    alert("Turno confirmado ✅");
+
+  })
+  .catch(err => {
+    console.error("ERROR AL GUARDAR:", err);
+    alert("Error al guardar turno");
+  });
 }
 
 </script>
