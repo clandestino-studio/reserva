@@ -78,6 +78,8 @@ input{
 </head>
 
 <body>
+  <h1>Turnos reservados</h1>
+<div id="listaTurnos">Cargando turnos...</div>
 
 <script>
   const PASSWORD = "clan-destino";
@@ -178,7 +180,8 @@ function cargar(){
   query
     .orderBy("fecha")
     .orderBy("hora")
-    .onSnapshot(snapshot => {
+    .get()
+    .then(snapshot => {
 
       agenda.innerHTML = "";
 
@@ -197,11 +200,15 @@ function cargar(){
           <div class="fecha">${t.fecha} · ${t.hora}</div>
           <strong>${t.barbero}</strong><br>
           Cliente: ${t.nombre}<br>
-          Servicio: ${t.servicio}
+          Servicio: ${t.servicio}<br>
           <button onclick="borrar('${id}')">Cancelar turno</button>
         `;
         agenda.appendChild(d);
       });
+    })
+    .catch(err => {
+      console.error("ERROR CARGANDO TURNOS:", err);
+      agenda.innerHTML = "<p>Error cargando turnos</p>";
     });
 }
 
