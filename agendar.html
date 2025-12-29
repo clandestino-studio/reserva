@@ -9,26 +9,27 @@
 <style>
 body{
   background:
-    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.8)),
-    url("fondo-under.jpg") center/cover no-repeat;
+    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.55)),
+    url("fondo-under.jpg") center center / cover no-repeat;
   color:#fff;
   font-family:'Oswald', Arial, sans-serif;
+  min-height:100vh;
+  margin:0;
   display:flex;
   justify-content:center;
-  align-items:flex-start;
-  min-height:100vh;
-  padding:20px 12px;
+  align-items:center;
 }
 
 
 
 .card{
-  background:rgba(10,10,10,.88);
+  background:rgba(5,5,5,.72);
   padding:26px 22px;
-  border-radius:18px;
+  border-radius:20px;
   width:100%;
   max-width:420px;
-  box-shadow:0 10px 40px rgba(0,0,0,.85);
+  box-shadow:0 20px 60px rgba(0,0,0,.85);
+  backdrop-filter:blur(4px);
 }
 
 
@@ -36,9 +37,9 @@ body{
 h1{
   text-align:center;
   color:#e63946;
-  letter-spacing:2px;
+  letter-spacing:4px;
   text-transform:uppercase;
-  margin-bottom:20px;
+  font-size:26px;
 }
 
 
@@ -106,6 +107,16 @@ button{
   button{
     font-size:17px;
     padding:15px;
+  }
+}
+
+@media (max-width:480px){
+  body{
+    align-items:flex-start;
+  }
+
+  .card{
+    margin-top:140px;
   }
 }
   
