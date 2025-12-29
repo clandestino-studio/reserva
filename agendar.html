@@ -245,6 +245,7 @@ barberoInput.onchange=cargarHorarios;
 fechaInput.onchange=cargarHorarios;
 
 function reservar(){
+  alert("ENTRÓ A RESERVAR");
   if(!nombreInput.value || !barberoInput.value || !servicioInput.value || !fechaInput.value || !horaSeleccionada){
     alert("Completá todo");
     return;
