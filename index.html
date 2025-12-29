@@ -149,56 +149,74 @@ barberos.forEach(b=>{
 });
 
 function cargar(){
-  agenda.innerHTML = "";
+  agenda.innerHTML = "<p>Cargando turnos...</p>";
 
-  let turnos = JSON.parse(localStorage.getItem("turnos")) || [];
-
-  // 🧹 LIMPIEZA + NORMALIZACIÓN
-  turnos = turnos
-    .filter(t => t && t.fecha && t.hora && t.nombre && t.barbero)
-    .map(t => ({
-      ...t,
-      id: t.id || crypto.randomUUID()
-    }));
-
-  localStorage.setItem("turnos", JSON.stringify(turnos));
+  let query = db.collection("turnos");
 
   const fechaFiltro = fechaInput.value;
-  let visibles = fechaFiltro
-    ? turnos.filter(t => t.fecha === fechaFiltro)
-    : turnos;
-
-  if(visibles.length === 0){
-    agenda.innerHTML = "<p>No hay turnos para mostrar</p>";
-    return;
+  if(fechaFiltro){
+    query = query.where("fecha", "==", fechaFiltro);
   }
 
-  visibles
-    .sort((a,b)=>{
-      if(a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
-      return a.hora.localeCompare(b.hora);
-    })
-    .forEach(t=>{
-      const d = document.createElement("div");
-      d.className = "turno";
-      d.innerHTML = `
-        <div class="fecha">${t.fecha} · ${t.hora}</div>
-        <strong>${t.barbero}</strong><br>
-        Cliente: ${t.nombre}
-        <button onclick="borrar('${t.id}')">Cancelar turno</button>
-      `;
-      agenda.appendChild(d);
+  query
+    .orderBy("fecha")
+    .orderBy("hora")
+    .onSnapshot(snapshot => {
+
+      agenda.innerHTML = "";
+
+      if(snapshot.empty){
+        agenda.innerHTML = "<p>No hay turnos para mostrar</p>";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const t = doc.data();
+        const id = doc.id;
+
+        const d = document.createElement("div");
+        d.className = "turno";
+        d.innerHTML = `
+          <div class="fecha">${t.fecha} · ${t.hora}</div>
+          <strong>${t.barbero}</strong><br>
+          Cliente: ${t.nombre}<br>
+          Servicio: ${t.servicio}
+          <button onclick="borrar('${id}')">Cancelar turno</button>
+        `;
+        agenda.appendChild(d);
+      });
     });
 }
 
 function borrar(id){
-  let turnos = JSON.parse(localStorage.getItem("turnos")) || [];
-  turnos = turnos.filter(t => t.id !== id);
-  localStorage.setItem("turnos", JSON.stringify(turnos));
-  cargar();
+  if(!confirm("¿Cancelar este turno?")) return;
+
+  db.collection("turnos").doc(id).delete()
+    .then(() => {
+      alert("Turno cancelado");
+    });
 }
 
 cargar();
+  
 </script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_AUTH_DOMAIN",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_STORAGE",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+  
 </body>
 </html>
