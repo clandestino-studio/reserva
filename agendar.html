@@ -180,35 +180,44 @@ function generarHorarios(){
 }
 
 function cargarHorarios(){
-  horariosDiv.innerHTML="";
-  horaSeleccionada=null;
+  horariosDiv.innerHTML = "";
+  horaSeleccionada = null;
 
-  const fecha=fechaInput.value;
-  const barbero=barberoInput.value;
-  if(!fecha||!barbero) return;
+  const fecha = fechaInput.value;
+  const barbero = barberoInput.value;
+  if(!fecha || !barbero) return;
 
-  const turnos=JSON.parse(localStorage.getItem("turnos"))||[];
-  const bloqueos=JSON.parse(localStorage.getItem("bloqueos"))||{};
-  const ocupados=turnos.filter(t=>t.fecha===fecha && t.barbero===barbero)
-                        .map(t=>t.hora);
+  db.collection("turnos")
+    .where("fecha", "==", fecha)
+    .where("barbero", "==", barbero)
+    .get()
+    .then(snapshot => {
 
-  generarHorarios().forEach(h=>{
-    const d=document.createElement("div");
-    d.className="hora";
-    d.textContent=h;
+      const ocupados = snapshot.docs.map(d => d.data().hora);
 
-    if(ocupados.includes(h) || (bloqueos[fecha]||[]).includes(barbero)){
-      d.classList.add("off");
-    }else{
-      d.onclick=()=>{
-        document.querySelectorAll(".hora").forEach(x=>x.classList.remove("sel"));
-        d.classList.add("sel");
-        horaSeleccionada=h;
-      };
-    }
-    horariosDiv.appendChild(d);
-  });
+      generarHorarios().forEach(h => {
+        const d = document.createElement("div");
+        d.className = "hora";
+        d.textContent = h;
+
+        if(ocupados.includes(h)){
+          d.classList.add("off");
+        } else {
+          d.onclick = () => {
+            document.querySelectorAll(".hora").forEach(x => x.classList.remove("sel"));
+            d.classList.add("sel");
+            horaSeleccionada = h;
+          };
+        }
+
+        horariosDiv.appendChild(d);
+      });
+    })
+    .catch(err => {
+      console.error("Error cargando horarios:", err);
+    });
 }
+
 
 const nombreInput=document.getElementById("nombre");
 const barberoInput=document.getElementById("barbero");
@@ -219,33 +228,55 @@ barberoInput.onchange=cargarHorarios;
 fechaInput.onchange=cargarHorarios;
 
 function reservar(){
-  if(!nombreInput.value||!barberoInput.value||!servicioInput.value||!fechaInput.value||!horaSeleccionada){
+  if(!nombreInput.value || !barberoInput.value || !servicioInput.value || !fechaInput.value || !horaSeleccionada){
     alert("Completá todo");
     return;
   }
 
-  const turno={
-    id:crypto.randomUUID(),
-    nombre:nombreInput.value,
-    barbero:barberoInput.value,
-    servicio:servicioInput.value,
-    fecha:fechaInput.value,
-    hora:horaSeleccionada
+  const turno = {
+    nombre: nombreInput.value,
+    barbero: barberoInput.value,
+    servicio: servicioInput.value,
+    fecha: fechaInput.value,
+    hora: horaSeleccionada,
+    creado: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  const t=JSON.parse(localStorage.getItem("turnos"))||[];
-  t.push(turno);
-  localStorage.setItem("turnos",JSON.stringify(t));
+  db.collection("turnos").add(turno)
+    .then(() => {
+      const tel = whatsapp[turno.barbero];
+      const msg = encodeURIComponent(
+        `Nuevo turno:\n${turno.nombre}\n${turno.fecha} ${turno.hora}\n${turno.servicio}`
+      );
 
-  const tel=whatsapp[turno.barbero];
-  const msg=encodeURIComponent(
-    `Nuevo turno:\n${turno.nombre}\n${turno.fecha} ${turno.hora}\n${turno.servicio}`
-  );
-
-  window.open(`https://wa.me/54${tel}?text=${msg}`,"_blank");
-  alert("Turno confirmado");
-  location.reload();
+      window.open(`https://wa.me/54${tel}?text=${msg}`,"_blank");
+      alert("Turno confirmado");
+      location.reload();
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error al guardar turno");
+    });
 }
+
 </script>
+  
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_AUTH_DOMAIN",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_STORAGE",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+  
 </body>
 </html>
