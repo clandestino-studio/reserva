@@ -260,16 +260,11 @@ function reservar(){
     creado: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  db.collection("turnos").add(turno)
-    .then(() => {
-      const tel = whatsapp[turno.barbero];
-      const msg = encodeURIComponent(
-        `Nuevo turno:\n${turno.nombre}\n${turno.fecha} ${turno.hora}\n${turno.servicio}`
-      );
+  console.log("Intentando guardar turno:", turno);
 
-      window.open(`https://wa.me/54${tel}?text=${msg}`,"_blank");
-      alert("Turno confirmado");
-      location.reload();
+db.collection("turnos").add(turno)
+  .then((docRef) => {
+    console.log("Turno guardado con ID:", docRef.id);
     })
     .catch(err => {
       console.error(err);
