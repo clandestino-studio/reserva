@@ -9,27 +9,28 @@
 <style>
 body{
   background:
-    linear-gradient(rgba(0,0,0,.75), rgba(0,0,0,.9)),
-    url("fondo-under.jpg") center/cover no-repeat fixed;
+    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.8)),
+    url("fondo-under.jpg") center/cover no-repeat;
   color:#fff;
-  font-family: 'Oswald', Arial, sans-serif;
+  font-family:'Oswald', Arial, sans-serif;
   display:flex;
   justify-content:center;
-  align-items:center;
+  align-items:flex-start;
   min-height:100vh;
+  padding:20px 12px;
 }
+
 
 
 .card{
-  background:rgba(15,15,15,.85);
-  backdrop-filter:blur(6px);
-  padding:32px;
+  background:rgba(10,10,10,.88);
+  padding:26px 22px;
   border-radius:18px;
   width:100%;
   max-width:420px;
-  box-shadow:0 0 40px rgba(0,0,0,.9);
-  border:1px solid rgba(255,255,255,.05);
+  box-shadow:0 10px 40px rgba(0,0,0,.85);
 }
+
 
 
 h1{
@@ -91,6 +92,23 @@ button{
   font-size:16px;
   cursor:pointer;
 }
+
+@media (max-width:480px){
+  h1{
+    font-size:26px;
+    letter-spacing:3px;
+  }
+
+  input, select{
+    font-size:16px;
+  }
+
+  button{
+    font-size:17px;
+    padding:15px;
+  }
+}
+  
 </style>
 </head>
 
