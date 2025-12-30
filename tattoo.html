@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reservar sesión | Clandestino Tattoo Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+  background:
+    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.55)),
+    url("Diseño sin título.png") center center / cover no-repeat;
+  color:#fff;
+  font-family:'Oswald', Arial, sans-serif;
+  min-height:100vh;
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.card{
+  background:rgba(5,5,5,.72);
+  padding:26px 22px;
+  border-radius:20px;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,.85);
+  backdrop-filter:blur(4px);
+}
+
+h1{
+  text-align:center;
+  color:#e63946;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  font-size:26px;
+}
+
+label{
+  margin-top:16px;
+  display:block;
+}
+
+input, select{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:8px;
+  border:none;
+  background:#333;
+  color:#fff;
+  font-size:15px;
+}
+
+.horarios{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:15px;
+}
+
+.hora{
+  padding:10px;
+  border-radius:10px;
+  background:#2e2e2e;
+  text-align:center;
+  cursor:pointer;
+}
+
+.hora:hover{background:#444}
+.hora.sel{background:#e63946}
+.hora.off{
+  background:#555;
+  opacity:.4;
+  pointer-events:none;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:20px;
+  border:none;
+  border-radius:10px;
+  background:#e63946;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+}
+
+@media (max-width:480px){
+  body{align-items:flex-start;}
+  .card{margin-top:140px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h1>Reservar sesión</h1>
+
+<label>Nombre</label>
+<input id="nombre">
+
+<label>Tatuador</label>
+<select id="tatuador">
+  <option value="">Seleccionar</option>
+  <option>Disre</option>
+  <option>Adrian Cerdan</option>
+</select>
+
+<label>Servicio</label>
+<select id="servicio">
+  <option value="">Seleccionar</option>
+  <option value="5x5">Tatuaje 5x5</option>
+  <option value="10x10">Tatuaje 10x10</option>
+  <option value="otro">Otro</option>
+</select>
+
+<label>Fecha</label>
+<input type="date" id="fecha">
+
+<label>Hora</label>
+<div class="horarios" id="horarios"></div>
+
+<button onclick="reservar()">Confirmar sesión</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDwNU_IreA5-LLCb8MKNsh_tk2hNFnWwSI",
+  authDomain: "clandestino-turnos.firebaseapp.com",
+  projectId: "clandestino-turnos",
+  storageBucket: "clandestino-turnos.firebasestorage.app",
+  messagingSenderId: "549861699412",
+  appId: "1:549861699412:web:87a0a598b9e9474b9aa2c1"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<script>
+const horariosDiv = document.getElementById("horarios");
+let horaSeleccionada = null;
+
+const whatsapp = {
+  "Adrian Cerdan":"2805053068",
+  "Disre":"2804567354"
+};
+
+const nombreInput = document.getElementById("nombre");
+const tatuadorInput = document.getElementById("tatuador");
+const servicioInput = document.getElementById("servicio");
+const fechaInput = document.getElementById("fecha");
+
+tatuadorInput.onchange = cargarHorarios;
+servicioInput.onchange = cargarHorarios;
+fechaInput.onchange = cargarHorarios;
+
+function generarHorarios(servicio){
+  let duracion = 180; // 3hs
+
+  if(servicio === "10x10"){
+    duracion = 240; // 4hs
+  }
+
+  const list = [];
+  const inicio = 10 * 60;
+  const fin = 21 * 60;
+
+  for(let m = inicio; m + duracion <= fin; m += duracion){
+    const h = String(Math.floor(m / 60)).padStart(2,"0");
+    const min = String(m % 60).padStart(2,"0");
+    list.push(`${h}:${min}`);
+  }
+  return list;
+}
+
+function cargarHorarios(){
+  horariosDiv.innerHTML = "";
+  horaSeleccionada = null;
+
+  if(!fechaInput.value || !tatuadorInput.value || !servicioInput.value) return;
+
+  db.collection("turnos")
+    .where("fecha", "==", fechaInput.value)
+    .where("tatuador", "==", tatuadorInput.value)
+    .get()
+    .then(snapshot => {
+      const ocupados = snapshot.docs.map(d => d.data().hora);
+
+      generarHorarios(servicioInput.value).forEach(h => {
+        const d = document.createElement("div");
+        d.className = "hora";
+        d.textContent = h;
+
+        if(ocupados.includes(h)){
+          d.classList.add("off");
+        } else {
+          d.onclick = () => {
+            document.querySelectorAll(".hora").forEach(x => x.classList.remove("sel"));
+            d.classList.add("sel");
+            horaSeleccionada = h;
+          };
+        }
+        horariosDiv.appendChild(d);
+      });
+    });
+}
+
+function reservar(){
+  if(!nombreInput.value || !tatuadorInput.value || !servicioInput.value || !fechaInput.value || !horaSeleccionada){
+    alert("Completá todo");
+    return;
+  }
+
+  const turno = {
+    nombre: nombreInput.value,
+    tatuador: tatuadorInput.value,
+    servicio: servicioInput.value,
+    fecha: fechaInput.value,
+    hora: horaSeleccionada,
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection("turnos").add(turno)
+    .then(() => {
+      const tel = whatsapp[turno.tatuador];
+      const msg = encodeURIComponent(
+        `Nueva sesión:\n${turno.nombre}\n${turno.fecha} ${turno.hora}\n${turno.servicio}`
+      );
+      window.open(`https://wa.me/54${tel}?text=${msg}`, "_blank");
+      alert("Sesión confirmada ✅");
+    })
+    .catch(() => alert("Error al guardar"));
+}
+</script>
+
+</body>
+</html>
